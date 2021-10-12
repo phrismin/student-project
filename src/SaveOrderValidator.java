@@ -30,25 +30,19 @@ public class SaveOrderValidator {
   }
 
   static AnswerCityRegister checkCityRegister(StudentOrder studentOrder) {
-    System.out.println("CityRegister is running");
-    AnswerCityRegister answer = new AnswerCityRegister();
-    answer.success = false;
-    return answer;
+    return CityRegisterValidator.checkCityRegister(studentOrder);
   }
 
   static AnswerWedding checkWedding(StudentOrder studentOrder) {
-    System.out.println("Wedding check is running");
-    return new AnswerWedding();
+    return WeddingValidator.checkWedding(studentOrder);
   }
 
   static AnswerChildren checkChildren(StudentOrder studentOrder) {
-    System.out.println("Children check is running");
-    return new AnswerChildren();
+    return ChildrenValidator.checkChildren(studentOrder);
   }
 
   static AnswerStudent checkStudent(StudentOrder studentOrder) {
-    System.out.println("Student check id running");
-    return new AnswerStudent();
+    return StudentValidator.checkStudent(studentOrder);
   }
 
   private static void sendMail(StudentOrder studentOrder) {
