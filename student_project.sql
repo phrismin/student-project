@@ -14,15 +14,15 @@ CREATE TABLE street
 
 CREATE TABLE country_structure
 (
-    area_id   CHAR(6) NOT NULL,
-    area_name VARCHAR(50),
+    area_id   CHAR(7) NOT NULL,
+    area_name VARCHAR(100),
     PRIMARY KEY (area_id)
 );
 
 CREATE TABLE passport_office
 (
     passp_office_id      INTEGER NOT NULL,
-    passp_office_area_id CHAR(6) NOT NULL,
+    passp_office_area_id CHAR(7) NOT NULL,
     passp_office_name    VARCHAR(100),
     PRIMARY KEY (passp_office_id),
     FOREIGN KEY (passp_office_area_id) REFERENCES country_structure (area_id) ON DELETE RESTRICT
@@ -31,7 +31,7 @@ CREATE TABLE passport_office
 CREATE TABLE register_office
 (
     reg_office_id      INTEGER NOT NULL,
-    reg_office_area_id CHAR(6) NOT NULL,
+    reg_office_area_id CHAR(7) NOT NULL,
     reg_office_name    VARCHAR(100),
     PRIMARY KEY (reg_office_id),
     FOREIGN KEY (reg_office_area_id) REFERENCES country_structure (area_id) ON DELETE RESTRICT
