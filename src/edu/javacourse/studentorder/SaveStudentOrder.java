@@ -3,18 +3,39 @@ package edu.javacourse.studentorder;
 import edu.javacourse.studentorder.dao.DictionaryDaoIml;
 import edu.javacourse.studentorder.domain.*;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.List;
 
 public class SaveStudentOrder {
   public static void main(String[] args) throws Exception {
-    List<Street> nd = new DictionaryDaoIml().findStreets("d");
-    for (Street i : nd) {
-      System.out.println(i.getStreetName());
+//    List<Street> streets = new DictionaryDaoIml().findStreets("про");
+//    for (Street s : streets) {
+//      System.out.println(s.getStreetName());
+//    }
+//
+//    List<PassportOffice> po = new DictionaryDaoIml().findPassportOffices("0102000");
+//    for (PassportOffice p : po) {
+//      System.out.println(p.getOfficeName());
+//    }
+//
+//    List<RegisterOffice> ro = new DictionaryDaoIml().findRegisterOffices("0101000");
+//    for (RegisterOffice r : ro) {
+//      System.out.println(r.getOfficeName());
+//    }
+
+    List<CountryArea> ca1 = new DictionaryDaoIml().findAreas("");
+    for (CountryArea ca : ca1) {
+      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
+    }
+    System.out.println("-----");
+    List<CountryArea> ca2 = new DictionaryDaoIml().findAreas("0200000");
+    for (CountryArea ca : ca2) {
+      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
+    }
+    System.out.println("-----");
+    List<CountryArea> ca3 = new DictionaryDaoIml().findAreas("0202000");
+    for (CountryArea ca : ca3) {
+      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
     }
   }
 
@@ -29,7 +50,9 @@ public class SaveStudentOrder {
     so.setStudentOrderId(id);
     so.setMarriageCertificateId("" + (123456000 + id));
     so.setMarriageDate(LocalDate.of(2016, 7, 4));
-    so.setMarriageOffice("Отдел ЗАГС");
+
+    RegisterOffice registerOffice = new RegisterOffice(1L, "", "");
+    so.setMarriageOffice(registerOffice);
 
     Street street = new Street(1L, "First street");
 
@@ -40,28 +63,35 @@ public class SaveStudentOrder {
     husband.setPassportSeries("" + (1000 + id));
     husband.setPassportNumber("" + (100000 + id));
     husband.setIssueDate(LocalDate.of(2017, 9, 15));
-    husband.setIssueDepartment("Отдел милиции №" + id);
+    PassportOffice passportOffice1 = new PassportOffice(1L, "", "");
+    husband.setIssueDepartment(passportOffice1);
     husband.setStudentId("" + (100000 + id));
     husband.setAddress(address);
+
     // Жена
     Adult wife = new Adult("Петрова", "Вероника", "Алексевна", LocalDate.of(1998, 3, 12));
     wife.setPassportSeries("" + (2000 + id));
     wife.setPassportNumber("" + (200000 + id));
     wife.setIssueDate(LocalDate.of(2018, 4, 5));
-    wife.setIssueDepartment("Отдел милиции №" + id);
+    PassportOffice passportOffice2 = new PassportOffice(2L, "", "");
+    wife.setIssueDepartment(passportOffice2);
     wife.setStudentId("" + (200000 + id));
     wife.setAddress(address);
+
     // Ребенок1
     Child child1 = new Child("Петрова", "Ирина", "Викторовна", LocalDate.of(2018, 6, 29));
     child1.setCertificateNumber("" + (300000 + id));
     child1.setIssueDate(LocalDate.of(2018, 7, 19));
-    child1.setIssueDepartment("Отдел ЗАГС №" + id);
+    RegisterOffice registerOffice2 = new RegisterOffice(2L, "", "");
+    child1.setIssueDepartment(registerOffice2);
     child1.setAddress(address);
+
     // Ребенок2
     Child child2 = new Child("Петрова", "Евгений", "Викторович", LocalDate.of(2018, 6, 29));
     child2.setCertificateNumber("" + (400000 + id));
     child2.setIssueDate(LocalDate.of(2018, 7, 19));
-    child2.setIssueDepartment("Отдел ЗАГС №" + id);
+    RegisterOffice registerOffice3 = new RegisterOffice(3L, "", "");
+    child2.setIssueDepartment(registerOffice3);
     child2.setAddress(address);
 
     so.setHusband(husband);
