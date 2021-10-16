@@ -24,56 +24,13 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
       "?, ?, ?, ?, ?, ?" +
       ")";
 
-  @Override
-  public Long saveStudentOrder(StudentOrder so) throws DaoException {
-    Long result = -1L;
-
-    try (Connection connection = getConnection();
-         PreparedStatement statement = connection.prepareStatement(INSERT_ORDER, new String[]{"student_order_id"})) {
-
-      // Header
-      statement.setInt(1, StudentOrderStatus.START.ordinal());
-      statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
-
-      // Husband and wife
-      setParamsForAdult(statement, 3, so.getHusband());
-      setParamsForAdult(statement, 16, so.getWife());
-
-      // Marriage
-      statement.setString(29, so.getMarriageCertificateId());
-      statement.setLong(30, so.getMarriageOffice().getOfficeId());
-      statement.setDate(31, Date.valueOf(so.getMarriageDate()));
-
-      statement.executeUpdate();
-
-      ResultSet generatedKeys = statement.getGeneratedKeys();
-      if (generatedKeys.next()) {
-        result = generatedKeys.getLong(1);
-      }
-
-    } catch (SQLException e) {
-      throw new DaoException(e);
-    }
-
-    return result;
-  }
-
-  private void setParamsForAdult(PreparedStatement statement, int index, Adult adult) throws SQLException {
-    statement.setString(index++, (adult.getSurName()));
-    statement.setString(index++, (adult.getGivenName()));
-    statement.setString(index++, (adult.getPatronymic()));
-    statement.setDate(index++, Date.valueOf(adult.getDateOfBirth()));
-    statement.setString(index++, adult.getPassportSeries());
-    statement.setString(index++, adult.getPassportNumber());
-    statement.setDate(index++, Date.valueOf(adult.getIssueDate()));
-    statement.setLong(index++, adult.getIssueDepartment().getOfficeId());
-    Address address = adult.getAddress();
-    statement.setString(index++, address.getPostIndex());
-    statement.setLong(index++, address.getStreet().getStreetCode());
-    statement.setString(index++, address.getBuilding());
-    statement.setString(index++, address.getBuilding());
-    statement.setString(index, address.getApartment());
-  }
+  public static final String INSERT_CHILD = "INSERT INTO student_child (" +
+      "student_order_id, child_sur_name, child_given_name, child_patronymic," +
+      "child_date_of_birth, child_certificate_number, child_certificate_date, child_register_office_id," +
+      "child_post_index, child_street_code, child_building, child_extension, child_apartment)" +
+      "VALUES (" +
+      "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
+      ");";
 
   // TODO refactoring: make one method
   private Connection getConnection() throws SQLException {
@@ -83,5 +40,97 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
         Config.getProperty(Config.DB_PASSWORD)
     );
     return connection;
+  }
+
+  @Override
+  public Long saveStudentOrder(StudentOrder so) throws DaoException {
+    Long studentOrderID = -1L;
+
+    try (Connection connection = getConnection();
+         PreparedStatement statement = connection.prepareStatement(INSERT_ORDER, new String[]{"student_order_id"})) {
+
+      connection.setAutoCommit(false);
+      try {
+        // Header
+        statement.setInt(1, StudentOrderStatus.START.ordinal());
+        statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+
+        // Husband and wife
+        setParamsForAdult(statement, 3, so.getHusband());
+        setParamsForAdult(statement, 16, so.getWife());
+
+        // Marriage
+        statement.setString(29, so.getMarriageCertificateId());
+        statement.setLong(30, so.getMarriageOffice().getOfficeId());
+        statement.setDate(31, Date.valueOf(so.getMarriageDate()));
+
+        statement.executeUpdate();
+
+        ResultSet generatedKeys = statement.getGeneratedKeys();
+        if (generatedKeys.next()) {
+          studentOrderID = generatedKeys.getLong(1);
+        }
+
+        saveChildren(connection, so, studentOrderID);
+        connection.commit();
+      } catch (SQLException exc) {
+        connection.rollback();
+        throw exc;
+      }
+
+    } catch (SQLException e) {
+      throw new DaoException(e);
+    }
+
+    return studentOrderID;
+  }
+
+  private void saveChildren(Connection connection, StudentOrder so, Long studentOrderID) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement(INSERT_CHILD)) {
+
+      for (Child child : so.getChildren()) {
+        statement.setLong(1, studentOrderID);
+        setParamsForChild(statement, child);
+        statement.executeUpdate();
+      }
+    }
+
+  }
+
+  private void setParamsForAdult(PreparedStatement statement, int index, Adult adult) throws SQLException {
+    setParamsForPerson(statement, index, adult);
+
+    statement.setString(index + 4, adult.getPassportSeries());
+    statement.setString(index + 5, adult.getPassportNumber());
+    statement.setDate(index + 6, Date.valueOf(adult.getIssueDate()));
+    statement.setLong(index + 7, adult.getIssueDepartment().getOfficeId());
+
+    setParamsForAddress(statement, index + 8, adult);
+  }
+
+  private void setParamsForChild(PreparedStatement statement, Child child) throws SQLException {
+    setParamsForPerson(statement, 2, child);
+
+    statement.setString(6, child.getCertificateNumber());
+    statement.setDate(7, Date.valueOf(child.getIssueDate()));
+    statement.setLong(8, child.getIssueDepartment().getOfficeId());
+
+    setParamsForAddress(statement, 9, child);
+  }
+
+  private void setParamsForPerson(PreparedStatement statement, int index, Person person) throws SQLException {
+    statement.setString(index, (person.getSurName()));
+    statement.setString(index + 1, (person.getGivenName()));
+    statement.setString(index + 2, (person.getPatronymic()));
+    statement.setDate(index + 3, Date.valueOf(person.getDateOfBirth()));
+  }
+
+  private void setParamsForAddress(PreparedStatement statement, int index, Person person) throws SQLException {
+    Address address = person.getAddress();
+    statement.setString(index, address.getPostIndex());
+    statement.setLong(index + 1, address.getStreet().getStreetCode());
+    statement.setString(index + 2, address.getBuilding());
+    statement.setString(index + 3, address.getExtension());
+    statement.setString(index + 4, address.getApartment());
   }
 }
