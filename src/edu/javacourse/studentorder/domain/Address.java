@@ -2,27 +2,27 @@ package edu.javacourse.studentorder.domain;
 
 public class Address {
 
-  private String postCode;
+  private String postIndex;
   private Street street;
   private String building;
   private String extension;
   private String apartment;
 
-  public Address(String postCode, Street street, String building,
+  public Address(String postIndex, Street street, String building,
                  String extension, String apartment) {
-    this.postCode = postCode;
+    this.postIndex = postIndex;
     this.street = street;
     this.building = building;
     this.extension = extension;
     this.apartment = apartment;
   }
 
-  public String getPostCode() {
-    return postCode;
+  public String getPostIndex() {
+    return postIndex;
   }
 
-  public void setPostCode(String postCode) {
-    this.postCode = postCode;
+  public void setPostIndex(String postCode) {
+    this.postIndex = postIndex;
   }
 
   public Street getStreet() {

@@ -125,7 +125,7 @@ public class DictionaryDaoIml implements DictionaryDao {
     }
   }
 
-
+  // TODO refactoring: make one method
   private Connection getConnection() throws SQLException {
     Connection connection = DriverManager.getConnection(
         Config.getProperty(Config.DB_URL),

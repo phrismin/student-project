@@ -40,6 +40,8 @@ CREATE TABLE register_office
 CREATE TABLE student_order
 (
     student_order_id        SERIAL,
+    student_order_status    INT NOT NULL,
+    student_order_date      TIMESTAMP NOT NULL,
     husb_sur_name           VARCHAR(50) NOT NULL,
     husb_given_name         VARCHAR(50) NOT NULL,
     husb_patronymic         VARCHAR(50) NOT NULL,

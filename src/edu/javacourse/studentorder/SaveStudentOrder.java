@@ -1,6 +1,8 @@
 package edu.javacourse.studentorder;
 
 import edu.javacourse.studentorder.dao.DictionaryDaoIml;
+import edu.javacourse.studentorder.dao.StudentOrderDao;
+import edu.javacourse.studentorder.dao.StudentOrderDaoImpl;
 import edu.javacourse.studentorder.domain.*;
 
 import java.time.LocalDate;
@@ -23,20 +25,25 @@ public class SaveStudentOrder {
 //      System.out.println(r.getOfficeName());
 //    }
 
-    List<CountryArea> ca1 = new DictionaryDaoIml().findAreas("");
-    for (CountryArea ca : ca1) {
-      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
-    }
-    System.out.println("-----");
-    List<CountryArea> ca2 = new DictionaryDaoIml().findAreas("0200000");
-    for (CountryArea ca : ca2) {
-      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
-    }
-    System.out.println("-----");
-    List<CountryArea> ca3 = new DictionaryDaoIml().findAreas("0202000");
-    for (CountryArea ca : ca3) {
-      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
-    }
+//    List<CountryArea> ca1 = new DictionaryDaoIml().findAreas("");
+//    for (CountryArea ca : ca1) {
+//      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
+//    }
+//    System.out.println("-----");
+//    List<CountryArea> ca2 = new DictionaryDaoIml().findAreas("0200000");
+//    for (CountryArea ca : ca2) {
+//      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
+//    }
+//    System.out.println("-----");
+//    List<CountryArea> ca3 = new DictionaryDaoIml().findAreas("0202000");
+//    for (CountryArea ca : ca3) {
+//      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
+//    }
+
+    StudentOrder studentOrder = SaveStudentOrder.buildStudentOrder(10);
+    StudentOrderDao dao = new StudentOrderDaoImpl();
+    Long id = dao.saveStudentOrder(studentOrder);
+    System.out.println(id);
   }
 
   static long saveStudentOrder(StudentOrder so) {
@@ -47,7 +54,7 @@ public class SaveStudentOrder {
 
   public static StudentOrder buildStudentOrder(long id) {
     StudentOrder so = new StudentOrder();
-    so.setStudentOrderId(id);
+    so.setOrderId(id);
     so.setMarriageCertificateId("" + (123456000 + id));
     so.setMarriageDate(LocalDate.of(2016, 7, 4));
 
