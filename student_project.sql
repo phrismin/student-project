@@ -3,13 +3,22 @@ DROP TABLE IF EXISTS student_order;
 DROP TABLE IF EXISTS passport_office;
 DROP TABLE IF EXISTS register_office;
 DROP TABLE IF EXISTS country_structure;
+DROP TABLE IF EXISTS university;
 DROP TABLE IF EXISTS street;
 
 CREATE TABLE street
 (
-    street_code INTEGER,
+    street_code INTEGER NOT NULL,
     street_name VARCHAR(100),
     PRIMARY KEY (street_code)
+);
+
+-- университеты Минска
+CREATE TABLE university
+(
+    university_id INTEGER NOT NULL,
+    university_name VARCHAR(150),
+    PRIMARY KEY (university_id)
 );
 
 CREATE TABLE country_structure
@@ -55,6 +64,8 @@ CREATE TABLE student_order
     husb_building           VARCHAR(5)  NOT NULL,
     husb_extension          VARCHAR(5),
     husb_apartment          VARCHAR(5),
+    husb_university_id      INTEGER     NOT NULL,
+    husb_student_number     VARCHAR(20) NOT NULL,
     wife_sur_name           VARCHAR(50) NOT NULL,
     wife_given_name         VARCHAR(50) NOT NULL,
     wife_patronymic         VARCHAR(50) NOT NULL,
@@ -68,12 +79,18 @@ CREATE TABLE student_order
     wife_building           VARCHAR(5)  NOT NULL,
     wife_extension          VARCHAR(5),
     wife_apartment          VARCHAR(5),
+    wife_university_id      INTEGER     NOT NULL,
+    wife_student_number     VARCHAR(20) NOT NULL,
     certificate_id          VARCHAR(20) NOT NULL,
     register_office_id      INTEGER     NOT NULL,
     marriage_date           DATE        NOT NULL,
     PRIMARY KEY (student_order_id),
     FOREIGN KEY (husb_street_code) REFERENCES street (street_code) ON DELETE RESTRICT,
+    FOREIGN KEY (husb_passport_office_id) REFERENCES passport_office (passp_office_id) ON DELETE RESTRICT,
+    FOREIGN KEY (husb_university_id) REFERENCES university (university_id) ON DELETE RESTRICT,
     FOREIGN KEY (wife_street_code) REFERENCES street (street_code) ON DELETE RESTRICT,
+    FOREIGN KEY (wife_passport_office_id) REFERENCES passport_office (passp_office_id) ON DELETE RESTRICT,
+    FOREIGN KEY (wife_university_id) REFERENCES university (university_id) ON DELETE RESTRICT,
     FOREIGN KEY (register_office_id) REFERENCES register_office (reg_office_id) ON DELETE RESTRICT
 );
 

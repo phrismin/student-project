@@ -8,21 +8,17 @@ import java.sql.*;
 import java.time.LocalDateTime;
 
 public class StudentOrderDaoImpl implements StudentOrderDao {
-  private static final String INSERT_ORDER = "INSERT INTO student_order (" +
-      "student_order_status, student_order_date, husb_sur_name, husb_given_name, husb_patronymic, " +
-      "husb_date_of_birth, husb_passport_series, husb_passport_number, husb_passport_date, husb_passport_office_id," +
-      "husb_post_index, husb_street_code, husb_building, husb_extension, husb_apartment," +
-      "wife_sur_name, wife_given_name, wife_patronymic, wife_date_of_birth, wife_passport_series," +
-      "wife_passport_number, wife_passport_date, wife_passport_office_id, wife_post_index, wife_street_code," +
-      "wife_building, wife_extension, wife_apartment, certificate_id, register_office_id, marriage_date)" +
-      "VALUES (" +
-      "?, ?, ?, ?, ?," +
-      "?, ?, ?, ?, ?," +
-      "?, ?, ?, ?, ?," +
-      "?, ?, ?, ?, ?," +
-      "?, ?, ?, ?, ?," +
-      "?, ?, ?, ?, ?, ?" +
-      ")";
+  private static final String INSERT_ORDER = "INSERT INTO student_order(" +
+      "student_order_status, student_order_date, husb_sur_name, husb_given_name, husb_patronymic," +
+      " husb_date_of_birth, husb_passport_series, husb_passport_number, husb_passport_date," +
+      " husb_passport_office_id, husb_post_index, husb_street_code, husb_building," +
+      " husb_extension, husb_apartment, husb_university_id, husb_student_number, wife_sur_name," +
+      " wife_given_name, wife_patronymic, wife_date_of_birth, wife_passport_series, wife_passport_number," +
+      " wife_passport_date, wife_passport_office_id, wife_post_index, wife_street_code, wife_building," +
+      " wife_extension, wife_apartment, wife_university_id, wife_student_number, certificate_id," +
+      " register_office_id, marriage_date)" +
+      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
+      " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
   public static final String INSERT_CHILD = "INSERT INTO student_child (" +
       "student_order_id, child_sur_name, child_given_name, child_patronymic," +
@@ -57,12 +53,12 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
 
         // Husband and wife
         setParamsForAdult(statement, 3, so.getHusband());
-        setParamsForAdult(statement, 16, so.getWife());
+        setParamsForAdult(statement, 18, so.getWife());
 
         // Marriage
-        statement.setString(29, so.getMarriageCertificateId());
-        statement.setLong(30, so.getMarriageOffice().getOfficeId());
-        statement.setDate(31, Date.valueOf(so.getMarriageDate()));
+        statement.setString(33, so.getMarriageCertificateId());
+        statement.setLong(34, so.getMarriageOffice().getOfficeId());
+        statement.setDate(35, Date.valueOf(so.getMarriageDate()));
 
         statement.executeUpdate();
 
@@ -73,9 +69,9 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
 
         saveChildren(connection, so, studentOrderID);
         connection.commit();
-      } catch (SQLException exc) {
+      } catch (SQLException SQLExc) {
         connection.rollback();
-        throw exc;
+        throw SQLExc;
       }
 
     } catch (SQLException e) {
@@ -91,8 +87,9 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
       for (Child child : so.getChildren()) {
         statement.setLong(1, studentOrderID);
         setParamsForChild(statement, child);
-        statement.executeUpdate();
+        statement.addBatch();
       }
+      statement.executeBatch();
     }
 
   }
@@ -106,6 +103,9 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
     statement.setLong(index + 7, adult.getIssueDepartment().getOfficeId());
 
     setParamsForAddress(statement, index + 8, adult);
+
+    statement.setLong(index + 13, adult.getUniversity().getUniversityId());
+    statement.setString(index + 14, adult.getUniversity().getUniversityName());
   }
 
   private void setParamsForChild(PreparedStatement statement, Child child) throws SQLException {
