@@ -6,9 +6,12 @@ import edu.javacourse.studentorder.exception.DaoException;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StudentOrderDaoImpl implements StudentOrderDao {
-  private static final String INSERT_ORDER = "INSERT INTO student_order(" +
+  private static final String INSERT_ORDER =
+      "INSERT INTO student_order(" +
       "student_order_status, student_order_date, husb_sur_name, husb_given_name, husb_patronymic," +
       " husb_date_of_birth, husb_passport_series, husb_passport_number, husb_passport_date," +
       " husb_passport_office_id, husb_post_index, husb_street_code, husb_building," +
@@ -20,13 +23,18 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
       " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
-  public static final String INSERT_CHILD = "INSERT INTO student_child (" +
+  public static final String INSERT_CHILD =
+      "INSERT INTO student_child (" +
       "student_order_id, child_sur_name, child_given_name, child_patronymic," +
       "child_date_of_birth, child_certificate_number, child_certificate_date, child_register_office_id," +
       "child_post_index, child_street_code, child_building, child_extension, child_apartment)" +
       "VALUES (" +
       "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
       ");";
+
+  public static final String SELECT_ORDERS =
+      "SELECT * FROM student_order " +
+      "WHERE student_order_status = 0 ORDER BY student_order_date";
 
   // TODO refactoring: make one method
   private Connection getConnection() throws SQLException {
@@ -79,6 +87,81 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
     }
 
     return studentOrderID;
+  }
+
+  @Override
+  public List<StudentOrder> getStudentOrders() throws DaoException {
+    List<StudentOrder> orderList = new ArrayList<>();
+
+    try (Connection connection = getConnection();
+         var statement = connection.prepareStatement(SELECT_ORDERS)) {
+
+      ResultSet resultSet = statement.executeQuery();
+      while (resultSet.next()) {
+        StudentOrder studentOrder = new StudentOrder();
+        fillStudentOrder(studentOrder, resultSet);
+        fillMarriage(studentOrder, resultSet);
+        Adult husband = fillParamForAdult(resultSet, "husb");
+        Adult wife = fillParamForAdult(resultSet, "wife");
+        studentOrder.setHusband(husband);
+        studentOrder.setWife(wife);
+
+        orderList.add(studentOrder);
+      }
+
+      resultSet.close();
+    } catch (SQLException SQLExc) {
+      throw new DaoException(SQLExc);
+    }
+    return orderList;
+  }
+
+  private Adult fillParamForAdult(ResultSet rs, String prefix) throws SQLException {
+    Adult adult = new Adult();
+    adult.setSurName(rs.getString(prefix + "_sur_name"));
+    adult.setGivenName(rs.getString(prefix + "_given_name"));
+    adult.setPatronymic(rs.getString(prefix + "_patronymic"));
+    adult.setDateOfBirth(rs.getDate(prefix + "_date_of_birth").toLocalDate());
+    adult.setPassportSeries(rs.getString(prefix + "_passport_series"));
+    adult.setPassportNumber(rs.getString(prefix + "_passport_number"));
+    adult.setIssueDate(rs.getDate(prefix + "_passport_date").toLocalDate());
+
+    var registerOffice = new PassportOffice(rs.getLong(prefix + "_passport_office_id"), "", "");
+    adult.setIssueDepartment(registerOffice);
+
+    var address = new Address();
+    address.setPostIndex(rs.getString(prefix + "_post_index"));
+    var street = new Street(rs.getLong(prefix + "_street_code"), "");
+    address.setStreet(street);
+    address.setBuilding(rs.getString(prefix + "_building"));
+    address.setExtension(rs.getString(prefix + "_extension"));
+    address.setApartment(rs.getString(prefix + "_apartment"));
+
+    adult.setAddress(address);
+
+    var university = new University();
+    university.setUniversityId(rs.getLong(prefix + "_university_id"));
+    university.setUniversityName(rs.getString(prefix + "_student_number"));
+
+    adult.setUniversity(university);
+
+    return adult;
+  }
+
+  private void fillMarriage(StudentOrder studentOrder, ResultSet resultSet) throws SQLException {
+    studentOrder.setMarriageCertificateId(resultSet.getString("certificate_id"));
+
+    Long registerOfficeId = resultSet.getLong("register_office_id");
+    RegisterOffice registerOffice = new RegisterOffice(registerOfficeId, "", "");
+    studentOrder.setMarriageOffice(registerOffice);
+
+    studentOrder.setMarriageDate(resultSet.getDate("marriage_date").toLocalDate());
+  }
+
+  private void fillStudentOrder(StudentOrder studentOrder, ResultSet resultSet) throws SQLException {
+    studentOrder.setOrderId(resultSet.getLong("student_order_id"));
+    studentOrder.setOrderStatus(StudentOrderStatus.fromValue(resultSet.getInt("student_order_status")));
+    studentOrder.setOrderDate(resultSet.getTimestamp("student_order_date").toLocalDateTime());
   }
 
   private void saveChildren(Connection connection, StudentOrder so, Long studentOrderID) throws SQLException {
