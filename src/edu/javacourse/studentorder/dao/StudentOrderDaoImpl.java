@@ -35,14 +35,14 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
           ");";
 
   public static final String SELECT_ORDERS =
-      "SELECT so.*, ro.reg_office_id, ro.reg_office_name, " +
+      "SELECT so.*, ro.reg_office_area_id, ro.reg_office_name, " +
           "po_h.passp_office_area_id husb_passp_office_area_id, po_h.passp_office_name husb_passp_office_name, " +
           "po_w.passp_office_area_id wife_passp_office_area_id, po_w.passp_office_name wife_passp_office_name " +
           "FROM student_order so " +
           "JOIN register_office ro ON so.register_office_id = ro.reg_office_id " +
           "JOIN passport_office po_h ON po_h.passp_office_id = so.husb_passport_office_id " +
           "JOIN passport_office po_w ON po_w.passp_office_id = so.wife_passport_office_id " +
-          "WHERE student_order_status = ? ORDER BY so.student_order_id";
+          "WHERE student_order_status = ? ORDER BY so.student_order_id LIMIT ?";
 
   public static final String SELECT_CHILD =
       "SELECT sc.*, ro.reg_office_area_id, ro.reg_office_name " +
@@ -68,7 +68,8 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
           "JOIN student_child so_c ON so.student_order_id = so_c.student_order_id " +
           "JOIN register_office ro_c ON ro_c.reg_office_id = so_c.child_register_office_id " +
           "WHERE student_order_status = ? " +
-          "ORDER BY so.student_order_date";
+          "ORDER BY so.student_order_id " +
+          "LIMIT ?";
 
   // TODO refactoring: make one method
   private Connection getConnection() throws SQLException {
@@ -191,7 +192,11 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
       Map<Long, StudentOrder> orderMap = new HashMap<>();
 
       statement.setInt(1, StudentOrderStatus.START.ordinal());
+      int limit = Integer.parseInt(Config.getProperty(Config.DB_LIMIT));
+      statement.setInt(2, limit);
+
       ResultSet resultSet = statement.executeQuery();
+      int counter = 0;
       while (resultSet.next()) {
         Long soId = resultSet.getLong("student_order_id");
         if (!orderMap.containsKey(soId)) {
@@ -199,11 +204,14 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
 
           orderList.add(studentOrder);
           orderMap.put(soId, studentOrder);
+          counter++;
         }
-
         StudentOrder studentOrder = orderMap.get(soId);
         studentOrder.addChildren(getChild(resultSet));
+      }
 
+      if (counter >= limit) {
+        orderList.remove(orderList.size() - 1);
       }
 
       resultSet.close();
@@ -221,6 +229,7 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
          var statement = connection.prepareStatement(SELECT_ORDERS)) {
 
       statement.setInt(1, StudentOrderStatus.START.ordinal());
+      statement.setInt(2, Integer.parseInt(Config.getProperty(Config.DB_LIMIT)));
       ResultSet resultSet = statement.executeQuery();
       while (resultSet.next()) {
         StudentOrder studentOrder = getStudentOrderWithoutChild(resultSet);

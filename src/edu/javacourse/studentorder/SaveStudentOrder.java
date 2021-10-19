@@ -9,35 +9,6 @@ import java.util.List;
 
 public class SaveStudentOrder {
   public static void main(String[] args) throws Exception {
-//    List<Street> streets = new DictionaryDaoIml().findStreets("про");
-//    for (Street s : streets) {
-//      System.out.println(s.getStreetName());
-//    }
-//
-//    List<PassportOffice> po = new DictionaryDaoIml().findPassportOffices("0102000");
-//    for (PassportOffice p : po) {
-//      System.out.println(p.getOfficeName());
-//    }
-//
-//    List<RegisterOffice> ro = new DictionaryDaoIml().findRegisterOffices("0101000");
-//    for (RegisterOffice r : ro) {
-//      System.out.println(r.getOfficeName());
-//    }
-
-//    List<CountryArea> ca1 = new DictionaryDaoIml().findAreas("");
-//    for (CountryArea ca : ca1) {
-//      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
-//    }
-//    System.out.println("-----");
-//    List<CountryArea> ca2 = new DictionaryDaoIml().findAreas("0200000");
-//    for (CountryArea ca : ca2) {
-//      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
-//    }
-//    System.out.println("-----");
-//    List<CountryArea> ca3 = new DictionaryDaoIml().findAreas("0202000");
-//    for (CountryArea ca : ca3) {
-//      System.out.println(ca.getAreaId() + ":" +ca.getAreaName());
-//    }
 
 //    StudentOrder studentOrder = SaveStudentOrder.buildStudentOrder(10);
     StudentOrderDao dao = new StudentOrderDaoImpl();
@@ -48,12 +19,6 @@ public class SaveStudentOrder {
     for (StudentOrder so : studentOrders) {
       System.out.println(so.getOrderId());
     }
-  }
-
-  static long saveStudentOrder(StudentOrder so) {
-    long answer = 47;
-    System.out.println("saveStudentOrder");
-    return answer;
   }
 
   public static StudentOrder buildStudentOrder(long id) {
