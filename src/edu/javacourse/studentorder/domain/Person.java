@@ -10,7 +10,6 @@ public class Person {
   private Address address;
 
   public Person() {
-
   }
 
   public Person(String surName, String givenName,
