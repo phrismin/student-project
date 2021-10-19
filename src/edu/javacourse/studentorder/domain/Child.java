@@ -12,7 +12,6 @@ public class Child extends Person {
     super(surName, givenName, patronymic, dateOfBirth);
   }
 
-
   public String getCertificateNumber() {
     return certificateNumber;
   }

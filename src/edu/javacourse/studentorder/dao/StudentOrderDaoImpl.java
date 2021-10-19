@@ -5,32 +5,35 @@ import edu.javacourse.studentorder.domain.*;
 import edu.javacourse.studentorder.exception.DaoException;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StudentOrderDaoImpl implements StudentOrderDao {
   private static final String INSERT_ORDER =
       "INSERT INTO student_order(" +
-      "student_order_status, student_order_date, husb_sur_name, husb_given_name, husb_patronymic," +
-      " husb_date_of_birth, husb_passport_series, husb_passport_number, husb_passport_date," +
-      " husb_passport_office_id, husb_post_index, husb_street_code, husb_building," +
-      " husb_extension, husb_apartment, husb_university_id, husb_student_number, wife_sur_name," +
-      " wife_given_name, wife_patronymic, wife_date_of_birth, wife_passport_series, wife_passport_number," +
-      " wife_passport_date, wife_passport_office_id, wife_post_index, wife_street_code, wife_building," +
-      " wife_extension, wife_apartment, wife_university_id, wife_student_number, certificate_id," +
-      " register_office_id, marriage_date)" +
-      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
-      " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+          "student_order_status, student_order_date, husb_sur_name, husb_given_name, husb_patronymic," +
+          " husb_date_of_birth, husb_passport_series, husb_passport_number, husb_passport_date," +
+          " husb_passport_office_id, husb_post_index, husb_street_code, husb_building," +
+          " husb_extension, husb_apartment, husb_university_id, husb_student_number, wife_sur_name," +
+          " wife_given_name, wife_patronymic, wife_date_of_birth, wife_passport_series, wife_passport_number," +
+          " wife_passport_date, wife_passport_office_id, wife_post_index, wife_street_code, wife_building," +
+          " wife_extension, wife_apartment, wife_university_id, wife_student_number, certificate_id," +
+          " register_office_id, marriage_date)" +
+          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
+          " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
   public static final String INSERT_CHILD =
       "INSERT INTO student_child (" +
-      "student_order_id, child_sur_name, child_given_name, child_patronymic," +
-      "child_date_of_birth, child_certificate_number, child_certificate_date, child_register_office_id," +
-      "child_post_index, child_street_code, child_building, child_extension, child_apartment)" +
-      "VALUES (" +
-      "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
-      ");";
+          "student_order_id, child_sur_name, child_given_name, child_patronymic," +
+          "child_date_of_birth, child_certificate_number, child_certificate_date, child_register_office_id," +
+          "child_post_index, child_street_code, child_building, child_extension, child_apartment)" +
+          "VALUES (" +
+          "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
+          ");";
 
   public static final String SELECT_ORDERS =
       "SELECT so.*, ro.reg_office_id, ro.reg_office_name, " +
@@ -40,6 +43,25 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
           "JOIN register_office ro ON so.register_office_id = ro.reg_office_id " +
           "JOIN passport_office po_h ON po_h.passp_office_id = so.husb_passport_office_id " +
           "JOIN passport_office po_w ON po_w.passp_office_id = so.wife_passport_office_id " +
+          "WHERE student_order_status = ? ORDER BY so.student_order_id";
+
+  public static final String SELECT_CHILD =
+      "SELECT sc.*, ro.reg_office_area_id, ro.reg_office_name " +
+          "FROM student_child sc " +
+          "JOIN register_office ro ON sc.child_register_office_id = ro.reg_office_id " +
+          "WHERE student_order_id IN  ";
+
+  public static final String SELECT_ORDERS_FULL =
+      "SELECT so.*, ro.reg_office_id, ro.reg_office_name, " +
+          "po_h.passp_office_area_id husb_passp_office_area_id, po_h.passp_office_name husb_passp_office_name, " +
+          "po_w.passp_office_area_id wife_passp_office_area_id, po_w.passp_office_name wife_passp_office_name " +
+          "sc.*, ro_c.reg_office_area_id, ro_c.reg_office_name " +
+          "FROM student_order so " +
+          "JOIN register_office ro ON so.register_office_id = ro.reg_office_id " +
+          "JOIN passport_office po_h ON po_h.passp_office_id = so.husb_passport_office_id " +
+          "JOIN passport_office po_w ON po_w.passp_office_id = so.wife_passport_office_id " +
+          "JOIN student_child soc ON so.student_order_id = soc.student_order_id " +
+          "JOIN register_office ro_c ON soc.register_office_id = ro_c.reg_office_id " +
           "WHERE student_order_status = ? ORDER BY so.student_order_id";
 
   // TODO refactoring: make one method
@@ -150,6 +172,10 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
 
   @Override
   public List<StudentOrder> getStudentOrders() throws DaoException {
+    return getStudentOrdersTwoSelect();
+  }
+
+  private List<StudentOrder> getStudentOrdersTwoSelect() throws DaoException {
     List<StudentOrder> orderList = new ArrayList<>();
 
     try (Connection connection = getConnection();
@@ -157,6 +183,7 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
 
       statement.setInt(1, StudentOrderStatus.START.ordinal());
       ResultSet resultSet = statement.executeQuery();
+//      List<Long> listId = new ArrayList<>();
       while (resultSet.next()) {
         StudentOrder studentOrder = new StudentOrder();
         fillStudentOrder(studentOrder, resultSet);
@@ -170,11 +197,64 @@ public class StudentOrderDaoImpl implements StudentOrderDao {
         orderList.add(studentOrder);
       }
 
+      findChildren(connection, orderList);
+
       resultSet.close();
     } catch (SQLException SQLExc) {
       throw new DaoException(SQLExc);
     }
     return orderList;
+  }
+
+  private void findChildren(Connection connection, List<StudentOrder> orderList) throws SQLException {
+    String stringChild = "(" + orderList.stream()
+        .map(StudentOrder::getOrderId).map(String::valueOf)
+        .collect(Collectors.joining(",")) + ")";
+
+    Map<Long, StudentOrder> orderMap = orderList.stream()
+        .collect(Collectors.toMap(StudentOrder::getOrderId, so -> so));
+
+    try (var statement = connection.prepareStatement(SELECT_CHILD + stringChild);
+         ResultSet resultSet = statement.executeQuery()) {
+
+      while (resultSet.next()) {
+        Child child = fillChild(resultSet);
+        long student_order_id = resultSet.getLong("student_order_id");
+        StudentOrder studentOrder = orderMap.get(student_order_id);
+        studentOrder.addChildren(child);
+      }
+    }
+  }
+
+  private Child fillChild(ResultSet rs) throws SQLException {
+    String sur_name = rs.getString("child_sur_name");
+    String given_name = rs.getString("child_given_name");
+    String patronymic = rs.getString("child_patronymic");
+    LocalDate dateOfBirth = rs.getDate("child_date_of_birth").toLocalDate();
+
+    Child child = new Child(sur_name, given_name, patronymic, dateOfBirth);
+
+    child.setCertificateNumber(rs.getString("child_certificate_number"));
+    child.setIssueDate(rs.getDate("child_certificate_date").toLocalDate());
+
+    RegisterOffice registerOffice = new RegisterOffice();
+    registerOffice.setOfficeId(rs.getLong("child_register_office_id"));
+    registerOffice.setOfficeAreaId(rs.getString("reg_office_area_id"));
+    registerOffice.setOfficeName(rs.getString("reg_office_name"));
+    child.setIssueDepartment(registerOffice);
+
+    Address address = new Address();
+    address.setPostIndex(rs.getString("child_post_index"));
+    Street street = new Street(rs.getLong("child_street_code"), "");
+    address.setStreet(street);
+
+    address.setBuilding(rs.getString("child_building"));
+    address.setExtension(rs.getString("child_extension"));
+    address.setApartment(rs.getString("child_apartment"));
+
+    child.setAddress(address);
+
+    return child;
   }
 
   private Adult fillParamForAdult(ResultSet rs, String prefix) throws SQLException {
