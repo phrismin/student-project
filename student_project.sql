@@ -13,10 +13,9 @@ CREATE TABLE street
     PRIMARY KEY (street_code)
 );
 
--- университеты Минска
 CREATE TABLE university
 (
-    university_id INTEGER NOT NULL,
+    university_id   INTEGER NOT NULL,
     university_name VARCHAR(150),
     PRIMARY KEY (university_id)
 );
@@ -49,8 +48,8 @@ CREATE TABLE register_office
 CREATE TABLE student_order
 (
     student_order_id        SERIAL,
-    student_order_status    INT NOT NULL,
-    student_order_date      TIMESTAMP NOT NULL,
+    student_order_status    INT         NOT NULL,
+    student_order_date      TIMESTAMP   NOT NULL,
     husb_sur_name           VARCHAR(50) NOT NULL,
     husb_given_name         VARCHAR(50) NOT NULL,
     husb_patronymic         VARCHAR(50) NOT NULL,
@@ -114,3 +113,7 @@ CREATE TABLE student_child
     FOREIGN KEY (child_street_code) REFERENCES street (street_code) ON DELETE RESTRICT,
     FOREIGN KEY (child_register_office_id) REFERENCES register_office (reg_office_id) ON DELETE RESTRICT
 );
+
+CREATE INDEX idx_student_order_status ON student_order (student_order_status);
+
+CREATE INDEX idx_student_order_id ON student_child (student_order_id);
